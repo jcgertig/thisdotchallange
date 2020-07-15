@@ -1,4 +1,4 @@
-import { Col, Layout, Row } from 'antd';
+import { Col, Layout, Pagination, Row } from 'antd';
 import Search from 'antd/lib/input/Search';
 import { useRouter } from 'next/router';
 import React, {
@@ -12,10 +12,14 @@ import React, {
 import Footer from '../components/footer';
 import UserList from '../components/user-list';
 import apiRoutes from '../lib/api';
+import { numberWithCommas } from '../lib/utils';
 
 const initialState = { pages: {}, totalPages: 0 };
 
 function reducer(state, action) {
+  if (action === null) {
+    return { ...initialState };
+  }
   return {
     pages: { ...state.pages, [action.page]: action.items },
     totalPages: action.totalPages
@@ -25,44 +29,84 @@ function reducer(state, action) {
 export default function Home() {
   const router = useRouter();
   const searchTerm = useRef<string | null>(null);
+  const page = useRef<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchMessage, setSearchMessage] = useState<any | null>(null);
   const [users, dispatch] = useReducer(reducer, initialState);
-  const [page, setPage] = useState<number | null>(null);
 
-  const handleSearch = useCallback(
-    async (value: string) => {
+  const searchDone = (message: any, newPage: number | null = null) => {
+    page.current = null;
+    setSearchMessage(message);
+    // work around to get animation to fire
+    requestAnimationFrame(() => {
+      page.current = newPage;
+      setLoading(false);
+    });
+  };
+
+  const handleSearch = async (value?: string | null, pageOverride?: number) => {
+    if (typeof value === 'string') {
+      if (searchTerm.current !== value) {
+        dispatch(null); // clear save pages
+      }
       searchTerm.current = value;
       setLoading(true);
-      setSearchMessage(null);
+
       try {
-        const res = await fetch(apiRoutes.services.github.users(value));
+        const res = await fetch(
+          apiRoutes.services.github.users(
+            value,
+            pageOverride || page.current || undefined
+          )
+        );
         const data = await res.json();
-        console.log('got res data', data);
         dispatch(data);
         if (data.totalPages > 0) {
-          if (page === null) {
-            setPage(0);
-          }
-          setSearchMessage(
+          searchDone(
             <>
-              Results: <strong>{data.total}</strong>
-            </>
+              Results: <strong>{numberWithCommas(data.total)}</strong>
+            </>,
+            data.page
           );
         } else {
-          setSearchMessage('No results found');
+          searchDone('No results found');
         }
       } catch (err) {
-        setSearchMessage(err.message);
+        searchDone(err.message);
       }
-      setLoading(false);
-    },
-    [page, dispatch]
-  );
+    }
+  };
 
   useEffect(() => {
     if (router.query.q) handleSearch(router.query.q as string);
   }, [router.query.q]);
+
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      if (typeof users.pages[newPage] !== 'undefined') {
+        page.current = null;
+        setLoading(true);
+        requestAnimationFrame(() => {
+          page.current = newPage;
+          setLoading(false);
+        });
+      } else {
+        handleSearch(searchTerm.current, newPage);
+      }
+    },
+    [users]
+  );
+
+  const pagination =
+    page.current !== null && users.totalPages > 1 ? (
+      <Pagination
+        disabled={loading}
+        defaultCurrent={page.current}
+        total={users.totalPages}
+        onChange={handlePageChange}
+        showSizeChanger={false}
+      />
+    ) : null;
 
   return (
     <Layout
@@ -94,13 +138,15 @@ export default function Home() {
             loading={loading}
             enterButton={true}
             defaultValue={router.query.q}
-            onSearch={handleSearch}
+            onSearch={(term) => handleSearch(term)}
           />
           <div>{searchMessage || <>&nbsp;</>}</div>
+          {pagination}
           <UserList
-            data={page !== null ? users.pages[page] : []}
+            data={page.current !== null ? users.pages[page.current] : []}
             match={searchTerm}
           />
+          {pagination}
         </Col>
       </Row>
       <Footer />

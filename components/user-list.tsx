@@ -1,4 +1,4 @@
-import { Avatar, Col, Row, Tag, Tooltip } from 'antd';
+import { Avatar, Badge, Col, Row, Tooltip } from 'antd';
 import React, { MutableRefObject, useRef } from 'react';
 import { animated, config, useChain, useSpring, useTrail } from 'react-spring';
 import styled from 'styled-components';
@@ -15,7 +15,7 @@ const itemHeight = 80;
 const UserListContainer = styled(animated.div)`
   position: relative;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(100px, 1fr));
   grid-auto-rows: min-content;
   grid-gap: 15px;
   width: 100%;
@@ -49,6 +49,23 @@ const UserListItem = styled(animated.div)`
   :hover {
     background: ${({ theme }) => theme.colors.white};
     box-shadow: 0px 10px 10px -5px rgba(0, 0, 0, 0.05);
+  }
+`;
+
+const UserBio = styled.span`
+  font-size: ${({ theme }) => theme.fontSizes[1]};
+  margin-left: 34px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  height: 20px;
+  width: 100%;
+`;
+
+const CountBadge = styled(Badge)`
+  pointer: cursor;
+  .ant-badge-count {
+    background-color: ${({ theme }) => theme.colors.dark};
   }
 `;
 
@@ -89,7 +106,7 @@ const UserList = ({ data, match }: UserListProps) => {
       ? val.toLocaleLowerCase().indexOf(match.current.toLocaleLowerCase()) > -1
       : false;
   };
-  console.log(data);
+
   return (
     <UserListContainer style={{ ...rest, height: size }}>
       {trail.map(({ x, height, width, ...restTrail }, index) => (
@@ -138,11 +155,7 @@ const UserList = ({ data, match }: UserListProps) => {
                 </Row>
                 {data[index].bio ? (
                   <Row>
-                    <span
-                      style={{ fontSize: theme.fontSizes[1], marginLeft: 34 }}
-                    >
-                      {data[index].bio}
-                    </span>
+                    <UserBio>{data[index].bio}</UserBio>
                   </Row>
                 ) : null}
                 <Row>
@@ -158,15 +171,10 @@ const UserList = ({ data, match }: UserListProps) => {
                   <Col>
                     <Tooltip title="Followers">
                       <a href={data[index].followers_url}>
-                        <Tag
-                          color={theme.colors.dark}
-                          style={{
-                            color: theme.colors.white,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {data[index].followers || '-'}
-                        </Tag>
+                        <CountBadge
+                          overflowCount={999}
+                          count={data[index].followers || '-'}
+                        />
                       </a>
                     </Tooltip>
                   </Col>
@@ -175,15 +183,10 @@ const UserList = ({ data, match }: UserListProps) => {
                   <Col>
                     <Tooltip title="Following">
                       <a href={data[index].following_url}>
-                        <Tag
-                          color={theme.colors.dark}
-                          style={{
-                            color: theme.colors.white,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {data[index].following || '-'}
-                        </Tag>
+                        <CountBadge
+                          overflowCount={999}
+                          count={data[index].following || '-'}
+                        />
                       </a>
                     </Tooltip>
                   </Col>

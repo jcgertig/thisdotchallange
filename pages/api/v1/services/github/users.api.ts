@@ -1,7 +1,6 @@
-import NodeCache from 'node-cache';
 import fetch from 'node-fetch';
 
-const UsersCache = new NodeCache({ stdTTL: 1000, checkperiod: 120 });
+import UsersCache from '../../../../../lib/users-cache';
 
 const noResult = {
   page: 0,
@@ -12,7 +11,7 @@ const noResult = {
 
 export default async function(req, res) {
   if (req.method === 'GET') {
-    const { q, page = 0 } = req.query;
+    const { q, page = 1 } = req.query;
     // If we don't have a query return standard no result
     if (!q) {
       return res.json(noResult);
@@ -43,7 +42,6 @@ export default async function(req, res) {
       }
     }
 
-    console.log('users', users);
     // cache the results
     const returnValue = {
       page,

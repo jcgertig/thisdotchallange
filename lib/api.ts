@@ -1,8 +1,10 @@
 const apiRoutes = {
   services: {
     github: {
-      users: (searchTerm: string) =>
-        `/api/v1/services/github/users?q=${encodeURIComponent(searchTerm)}`
+      users: (searchTerm: string, page = 1) =>
+        `/api/v1/services/github/users?q=${encodeURIComponent(
+          searchTerm
+        )}&page=${page}`
     }
   }
 };
