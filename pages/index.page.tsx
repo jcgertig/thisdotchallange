@@ -47,6 +47,8 @@ export default function Home() {
   const handleSearch = async (value?: string | null, pageOverride?: number) => {
     if (typeof value === 'string') {
       if (searchTerm.current !== value) {
+        page.current = null;
+        setSearchMessage(null);
         dispatch(null); // clear save pages
       }
       searchTerm.current = value;
