@@ -4,6 +4,7 @@ import { animated, config, useChain, useSpring, useTrail } from 'react-spring';
 import styled from 'styled-components';
 
 import theme, { device } from '../lib/theme';
+import { numberWithCommas } from '../lib/utils';
 
 interface UserListProps {
   data: Array<any>;
@@ -22,13 +23,13 @@ const UserListContainer = styled(animated.div)`
   overflow: hidden;
   will-change: padding, height;
   @media ${device.mobileS} {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(100px, 1fr));
   }
   @media ${device.tablet} {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(100px, 1fr));
   }
   @media ${device.desktop} {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(100px, 1fr));
   }
 `;
 
@@ -120,7 +121,7 @@ const UserList = ({ data, match }: UserListProps) => {
         >
           <UserListItem style={{ height, width }}>
             <Row>
-              <Col xs={{ span: 20, offset: 0 }} lg={{ span: 22, offset: 0 }}>
+              <Col xs={{ span: 19, offset: 0 }} lg={{ span: 21, offset: 0 }}>
                 <Row>
                   <a href={data[index].url}>
                     <Avatar size={24} src={data[index].avatar_url} />
@@ -155,7 +156,11 @@ const UserList = ({ data, match }: UserListProps) => {
                 </Row>
                 {data[index].bio ? (
                   <Row>
-                    <UserBio>{data[index].bio}</UserBio>
+                    <Tooltip title={data[index].bio} placement="bottom">
+                      <UserBio style={{ paddingRight: 10 }}>
+                        {data[index].bio}
+                      </UserBio>
+                    </Tooltip>
                   </Row>
                 ) : null}
                 <Row>
@@ -166,10 +171,16 @@ const UserList = ({ data, match }: UserListProps) => {
                   </span>
                 </Row>
               </Col>
-              <Col xs={{ span: 4, offset: 0 }} lg={{ span: 2, offset: 0 }}>
+              <Col xs={{ span: 5, offset: 0 }} lg={{ span: 3, offset: 0 }}>
                 <Row gutter={[0, 16]}>
                   <Col>
-                    <Tooltip title="Followers">
+                    <Tooltip
+                      title={`${
+                        data[index].followers
+                          ? numberWithCommas(data[index].followers)
+                          : '-'
+                      } Followers`}
+                    >
                       <a href={data[index].followers_url}>
                         <CountBadge
                           overflowCount={999}
@@ -181,7 +192,13 @@ const UserList = ({ data, match }: UserListProps) => {
                 </Row>
                 <Row gutter={[0, 16]}>
                   <Col>
-                    <Tooltip title="Following">
+                    <Tooltip
+                      title={`Following ${
+                        data[index].following
+                          ? numberWithCommas(data[index].following)
+                          : '-'
+                      }`}
+                    >
                       <a href={data[index].following_url}>
                         <CountBadge
                           overflowCount={999}
