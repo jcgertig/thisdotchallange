@@ -30,7 +30,7 @@ export default async function(req, res) {
     );
     const data = await queryRes.json();
 
-    // Loop over users to full them out with info
+    // Loop over users to fill them out with info
     const users: Array<any> = [];
     for (const user of data.items || []) {
       if (user.login) {
